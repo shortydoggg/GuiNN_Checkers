@@ -1,0 +1,52 @@
+diff --git a/src/board.cpp b/src/board.cpp
+index 7b815ee..b6ce366 100644
+--- a/src/board.cpp
++++ b/src/board.cpp
+@@ -262,7 +262,7 @@ std::string Board::ToString()
+ 	return ret;
+ }
+ 
+-int Board::FromString( char *text )
++int Board::FromString(const char *text )
+ {
+ 	int nColor = 0, i = 0;
+ 	while (text[i] == ' ') i++;
+@@ -284,6 +284,12 @@ int Board::FromString( char *text )
+ 			i++;
+ 			if (text[i] >= '0' && text[i] <= '9') sq = sq*10 + text[i]-'0';
+ 			SetPiece(FlipSqX(sq-1), nColor | nKing );
++			
++			/* Fix bug when FEN doesn't end in a period. Period is not in
++			 * the PDN 3.0 standard. See https://pdn.fmjd.org/
++			 */
++			if (text[i] == 0)
++					break;
+ 		}
+ 		i++;
+ 	}
+diff --git a/src/board.h b/src/board.h
+index d00b7f7..0b4ead1 100644
+--- a/src/board.h
++++ b/src/board.h
+@@ -73,7 +73,7 @@ struct Board
+ 	int dbWinEval(int dbresult) const;
+ 
+ 	std::string ToString();
+-	int FromString( char *text );
++	int FromString(const char *text );
+ 
+ 	static Board StartPosition();
+ 	Board Flip();
+diff --git a/src/cb_interface.h b/src/cb_interface.h
+index a960e4d..a4d3b0c 100644
+--- a/src/cb_interface.h
++++ b/src/cb_interface.h
+@@ -78,7 +78,7 @@ typedef INT (WINAPI *CB_GETMOVE)(Board8x8 board, int color, double maxtime, char
+ typedef INT (WINAPI *CB_GETSTRING)(char str[255]);		/* engine name, engine help */
+ typedef unsigned int (WINAPI *CB_GETGAMETYPE)(void);	/* return GT_ENGLISH, GT_ITALIAN, ... */
+ typedef INT (WINAPI *CB_ISLEGAL)(Board8x8 board, int color, int from, int to, CBmove *move);
+-typedef INT (WINAPI *CB_ENGINECOMMAND)(char command[256], char reply[ENGINECOMMAND_REPLY_SIZE]);
++typedef INT (WINAPI *CB_ENGINECOMMAND)(const char *command, char reply[ENGINECOMMAND_REPLY_SIZE]);
+ 
+ 
+ /*
